@@ -7,7 +7,7 @@
 #include "../config/pins.h"
 #include "../config/colors.h"
 
-// ✅ TFT global (como el test que funcionó)
+// ✅ TFT global
 extern Adafruit_ST7735 tft;
 
 class Display {
@@ -15,6 +15,12 @@ public:
   static void begin();
   static void clear();
   static void setRotation(uint8_t rotation);
+  
+  // ⭐ AGREGADOS - Métodos directos de texto
+  static void setTextSize(uint8_t size);
+  static void setTextColor(uint16_t color);
+  static void setTextColor(uint16_t color, uint16_t bg);
+  static void setCursor(int16_t x, int16_t y);
   
   // Texto
   static void drawText(const char* text, int x, int y, uint16_t color, uint8_t size = 1);

@@ -3,7 +3,7 @@
 
 // ===== DISPLAY TFT ST7735 =====
 #define PIN_TFT_CS      5
-#define PIN_TFT_DC      2
+#define PIN_TFT_DC      2 //A0
 #define PIN_TFT_RST     4
 // SPI hardware: MOSI=23, SCK=18
 

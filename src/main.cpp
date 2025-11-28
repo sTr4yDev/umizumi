@@ -16,27 +16,67 @@
 #include "ui/Menu.h"
 #include "ui/Screens.h"
 
-// Modos
+// Modos - Productividad
 #include "modes/Pomodoro.h"
 #include "modes/Gym.h"
+#include "modes/productivity/TaskTimer.h"
 
-// ===== VARIABLES GLOBALES =====
+// TODO: Agregar cuando estén listos
+// #include "modes/games/Snake.h"
+// #include "modes/tools/Stopwatch.h"
+// #include "modes/tools/Countdown.h"
+// #include "modes/tools/Flashlight.h"
+
+// ===== ENUMS DE MODOS =====
 enum AppMode {
-  MODE_MENU,
+  // Menús
+  MODE_MAIN_MENU,
+  MODE_PRODUCTIVITY_MENU,
+  MODE_GAMES_MENU,
+  MODE_TOOLS_MENU,
+  MODE_SETTINGS_MENU,
+  MODE_INFO_MENU,
+  
+  // Productividad
   MODE_POMODORO,
   MODE_POMODORO_CONFIG,
   MODE_GYM,
-  MODE_SETTINGS,
+  MODE_TASK_TIMER,
   MODE_STATS,
-  MODE_INFO
+  
+  // Juegos (placeholders)
+  MODE_GAME_SNAKE,
+  MODE_GAME_PONG,
+  MODE_GAME_TETRIS,
+  MODE_GAME_FLAPPY,
+  MODE_GAME_SPACE_INVADERS,
+  
+  // Herramientas (placeholders)
+  MODE_TOOL_STOPWATCH,
+  MODE_TOOL_COUNTDOWN,
+  MODE_TOOL_CALCULATOR,
+  MODE_TOOL_LEVEL,
+  MODE_TOOL_FLASHLIGHT,
+  
+  // Configuración
+  MODE_SET_WIFI,
+  MODE_SET_DISPLAY,
+  MODE_SET_SOUND,
+  MODE_SET_SENSORS,
+  MODE_SET_RESET,
+  
+  // Info
+  MODE_INFO_SYSTEM,
+  MODE_INFO_WIFI,
+  MODE_INFO_GLOBAL_STATS,
+  MODE_INFO_ABOUT
 };
 
-AppMode currentMode = MODE_MENU;
-AppMode previousMode = MODE_MENU;
+AppMode currentMode = MODE_MAIN_MENU;
+AppMode previousMode = MODE_MAIN_MENU;
 
 unsigned long lastUpdate = 0;
 unsigned long lastUIRefresh = 0;
-
 bool longPressHandled = false;
 
 // ===== FUNCIONES AUXILIARES =====
@@ -50,84 +90,137 @@ void changeMode(AppMode newMode) {
   previousMode = currentMode;
   currentMode = newMode;
   
-  // Limpiar pantalla en cambio de modo
+  // Limpiar pantalla
   display.clear();
   
-  // Acciones al entrar en cada modo
+  // Acciones al salir del modo anterior
+  switch (previousMode) {
+    case MODE_POMODORO:
+      pomodoro.stop();
+      break;
+    case MODE_GYM:
+      gym.stop();
+      break;
+    case MODE_TASK_TIMER:
+      // TaskTimer se mantiene corriendo
+      break;
+    default:
+      break;
+  }
+  
+  // Acciones al entrar al nuevo modo
   switch (newMode) {
     case MODE_POMODORO_CONFIG:
       pomodoro.enterConfigMode();
       break;
-      
     case MODE_POMODORO:
       if (previousMode == MODE_POMODORO_CONFIG) {
         pomodoro.exitConfigMode();
       }
       break;
-      
-    case MODE_GYM:
-      // Resetear gym si viene del menú
-      if (previousMode == MODE_MENU) {
-        gym.stop();
+    case MODE_TASK_TIMER:
+      if (taskTimer.getState() == TASK_COMPLETED) {
+        taskTimer.reset();
       }
       break;
-      
-    case MODE_MENU:
-      // Detener todo al volver al menú
-      if (previousMode == MODE_POMODORO) {
-        pomodoro.stop();
-      }
-      if (previousMode == MODE_GYM) {
-        gym.stop();
-      }
-      output.allLedsOff();
-      break;
-      
     default:
       break;
+  }
+  
+  // Apagar LEDs al cambiar de modo (excepto TaskTimer)
+  if (newMode != MODE_TASK_TIMER || taskTimer.getState() == TASK_IDLE) {
+    output.allLedsOff();
   }
 }
 
 void handleMenuNavigation() {
-  // El menú maneja su propia navegación
   menu.update();
   
-  // ✅ CORREGIDO: Usar sistema de notificación en lugar de verificación estática
-  if (menu.hasScreenChanged()) {
-    MenuScreen screen = menu.getPendingScreen();
-    menu.clearScreenChange();
+  MenuScreen screen = menu.getCurrentScreen();
+  static MenuScreen lastScreen = SCREEN_MAIN_MENU;
+  
+  if (screen != lastScreen) {
+    lastScreen = screen;
     
-    Serial.print("Main: Processing screen change to ");
-    Serial.println(screen);
-    
-    // Cambiar modo según pantalla seleccionada
+    // Mapear MenuScreen a AppMode
     switch (screen) {
+      // Productividad
       case SCREEN_POMODORO_CONFIG:
         changeMode(MODE_POMODORO_CONFIG);
         break;
-        
-      case SCREEN_POMODORO_RUNNING:
-        changeMode(MODE_POMODORO);
-        break;
-        
       case SCREEN_GYM_RUNNING:
         changeMode(MODE_GYM);
         break;
-        
-      case SCREEN_SETTINGS:
-        changeMode(MODE_SETTINGS);
+      case SCREEN_TASK_TIMER:
+        changeMode(MODE_TASK_TIMER);
         break;
-        
       case SCREEN_STATS:
         changeMode(MODE_STATS);
         break;
         
-      case SCREEN_INFO:
-        changeMode(MODE_INFO);
+      // Juegos
+      case SCREEN_GAME_SNAKE:
+        changeMode(MODE_GAME_SNAKE);
+        break;
+      case SCREEN_GAME_PONG:
+        changeMode(MODE_GAME_PONG);
+        break;
+      case SCREEN_GAME_TETRIS:
+        changeMode(MODE_GAME_TETRIS);
+        break;
+      case SCREEN_GAME_FLAPPY:
+        changeMode(MODE_GAME_FLAPPY);
+        break;
+      case SCREEN_GAME_SPACE_INVADERS:
+        changeMode(MODE_GAME_SPACE_INVADERS);
         break;
         
-      case SCREEN_MAIN_MENU:
-        changeMode(MODE_MENU);
+      // Herramientas
+      case SCREEN_TOOL_STOPWATCH:
+        changeMode(MODE_TOOL_STOPWATCH);
+        break;
+      case SCREEN_TOOL_COUNTDOWN:
+        changeMode(MODE_TOOL_COUNTDOWN);
+        break;
+      case SCREEN_TOOL_CALCULATOR:
+        changeMode(MODE_TOOL_CALCULATOR);
+        break;
+      case SCREEN_TOOL_LEVEL:
+        changeMode(MODE_TOOL_LEVEL);
+        break;
+      case SCREEN_TOOL_FLASHLIGHT:
+        changeMode(MODE_TOOL_FLASHLIGHT);
+        break;
+        
+      // Configuración
+      case SCREEN_SET_WIFI:
+        changeMode(MODE_SET_WIFI);
+        break;
+      case SCREEN_SET_DISPLAY:
+        changeMode(MODE_SET_DISPLAY);
+        break;
+      case SCREEN_SET_SOUND:
+        changeMode(MODE_SET_SOUND);
+        break;
+      case SCREEN_SET_SENSORS:
+        changeMode(MODE_SET_SENSORS);
+        break;
+      case SCREEN_SET_RESET:
+        changeMode(MODE_SET_RESET);
+        break;
+        
+      // Info
+      case SCREEN_INFO_SYSTEM:
+        changeMode(MODE_INFO_SYSTEM);
+        break;
+      case SCREEN_INFO_WIFI:
+        changeMode(MODE_INFO_WIFI);
+        break;
+      case SCREEN_INFO_GLOBAL_STATS:
+        changeMode(MODE_INFO_GLOBAL_STATS);
+        break;
+      case SCREEN_INFO_ABOUT:
+        changeMode(MODE_INFO_ABOUT);
         break;
         
       default:
@@ -136,24 +229,23 @@ void handleMenuNavigation() {
   }
 }
 
+// ===== HANDLERS DE PRODUCTIVIDAD =====
+
 void handlePomodoroConfigMode() {
   ButtonEvent event = input.getButtonEvent();
   
   switch (event) {
     case BTN_SELECT_RELEASED:
-      // Siguiente campo
       pomodoro.nextConfigField();
       break;
       
     case BTN_SELECT_LONG_PRESS:
-      // Guardar y salir
       pomodoro.saveConfiguration();
       changeMode(MODE_POMODORO);
       break;
       
     case BTN_BACK_RELEASED:
-      // Salir sin guardar
-      changeMode(MODE_MENU);
+      changeMode(MODE_MAIN_MENU);
       menu.goToScreen(SCREEN_MAIN_MENU);
       break;
       
@@ -161,7 +253,6 @@ void handlePomodoroConfigMode() {
       break;
   }
   
-  // Ajustar valores con potenciómetro
   if (input.potChanged()) {
     int potValue = input.getPotPosition();
     pomodoro.adjustConfigValue(potValue);
@@ -173,7 +264,6 @@ void handlePomodoroMode() {
   
   switch (event) {
     case BTN_SELECT_RELEASED:
-      // Toggle Start/Pause
       if (pomodoro.getState() == POM_IDLE) {
         pomodoro.start();
       } else if (pomodoro.getState() == POM_RUNNING) {
@@ -188,23 +278,20 @@ void handlePomodoroMode() {
       break;
       
     case BTN_SELECT_LONG_PRESS:
-      // Long press: Entrar a configuración
       if (pomodoro.getState() == POM_IDLE) {
         changeMode(MODE_POMODORO_CONFIG);
       } else {
-        // Si está corriendo, detener
         pomodoro.stop();
       }
       break;
       
     case BTN_BACK_RELEASED:
-      // Skip break o volver al menú
       if (pomodoro.getState() == POM_SHORT_BREAK || 
           pomodoro.getState() == POM_LONG_BREAK ||
           pomodoro.getState() == POM_BREAK_PAUSED) {
         pomodoro.skipBreak();
       } else {
-        changeMode(MODE_MENU);
+        changeMode(MODE_MAIN_MENU);
         menu.goToScreen(SCREEN_MAIN_MENU);
       }
       break;
@@ -213,7 +300,6 @@ void handlePomodoroMode() {
       break;
   }
   
-  // Actualizar lógica del pomodoro
   pomodoro.update();
 }
 
@@ -222,7 +308,6 @@ void handleGymMode() {
   
   switch (event) {
     case BTN_SELECT_RELEASED:
-      // Manual start/pause (alternativo al CLAP)
       if (gym.getState() == GYM_IDLE || gym.getState() == GYM_PAUSED) {
         gym.start();
       } else {
@@ -231,13 +316,11 @@ void handleGymMode() {
       break;
       
     case BTN_SELECT_LONG_PRESS:
-      // Reset session
       gym.reset();
       break;
       
     case BTN_BACK_RELEASED:
-      // Volver al menú
-      changeMode(MODE_MENU);
+      changeMode(MODE_MAIN_MENU);
       menu.goToScreen(SCREEN_MAIN_MENU);
       break;
       
@@ -245,8 +328,42 @@ void handleGymMode() {
       break;
   }
   
-  // Actualizar lógica del gym
   gym.update();
+}
+
+void handleTaskTimerMode() {
+  ButtonEvent event = input.getButtonEvent();
+  
+  switch (event) {
+    case BTN_SELECT_RELEASED:
+      if (taskTimer.getState() == TASK_IDLE) {
+        taskTimer.start();
+      } else if (taskTimer.getState() == TASK_RUNNING) {
+        taskTimer.pause();
+      } else if (taskTimer.getState() == TASK_PAUSED) {
+        taskTimer.resume();
+      } else if (taskTimer.getState() == TASK_COMPLETED) {
+        taskTimer.reset();
+      }
+      break;
+      
+    case BTN_SELECT_LONG_PRESS:
+      if (taskTimer.getState() == TASK_RUNNING || 
+          taskTimer.getState() == TASK_PAUSED) {
+        taskTimer.stop();
+      }
+      break;
+      
+    case BTN_BACK_RELEASED:
+      changeMode(MODE_MAIN_MENU);
+      menu.goToScreen(SCREEN_MAIN_MENU);
+      break;
+      
+    default:
+      break;
+  }
+  
+  taskTimer.update();
 }
 
 void handleStatsMode() {
@@ -254,13 +371,11 @@ void handleStatsMode() {
   
   switch (event) {
     case BTN_SELECT_LONG_PRESS:
-      // Resetear estadísticas
       if (!longPressHandled) {
         storage.resetStats();
         output.playSuccess();
         delay(500);
         
-        // Recargar stats
         Statistics stats;
         storage.loadStats(stats);
         
@@ -271,7 +386,7 @@ void handleStatsMode() {
       break;
       
     case BTN_BACK_RELEASED:
-      changeMode(MODE_MENU);
+      changeMode(MODE_MAIN_MENU);
       menu.goToScreen(SCREEN_MAIN_MENU);
       longPressHandled = false;
       break;
@@ -282,58 +397,59 @@ void handleStatsMode() {
   }
 }
 
-void handleSettingsMode() {
-  ButtonEvent event = input.getButtonEvent();
+// ===== HANDLERS DE PLACEHOLDERS =====
+
+void handlePlaceholder(const char* feature) {
+  display.clear();
   
-  switch (event) {
-    case BTN_BACK_RELEASED:
-      changeMode(MODE_MENU);
-      menu.goToScreen(SCREEN_MAIN_MENU);
-      break;
-      
-    default:
-      break;
+  display.fillRect(0, 0, display.getWidth(), 22, COLOR_WARNING);
+  display.drawCentered("EN DESARROLLO", 7, ST77XX_WHITE, 1);
+  
+  display.drawCentered(feature, 50, COLOR_TEXT, 2);
+  display.drawCentered("Proximamente...", 80, COLOR_INFO, 1);
+  
+  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
+  
+  ButtonEvent event = input.getButtonEvent();
+  if (event == BTN_BACK_RELEASED) {
+    changeMode(MODE_MAIN_MENU);
+    menu.goToScreen(SCREEN_MAIN_MENU);
   }
 }
 
-void handleInfoMode() {
-  ButtonEvent event = input.getButtonEvent();
-  
-  switch (event) {
-    case BTN_BACK_RELEASED:
-      changeMode(MODE_MENU);
-      menu.goToScreen(SCREEN_MAIN_MENU);
-      break;
-      
-    default:
-      break;
-  }
-}
+// ===== UPDATE UI =====
 
 void updateUI() {
   unsigned long now = millis();
   
-  // Refrescar UI cada 300ms
   if (now - lastUIRefresh < UI_REFRESH_MS) {
     return;
   }
   lastUIRefresh = now;
   
   switch (currentMode) {
-    case MODE_MENU:
+    // Menús
+    case MODE_MAIN_MENU:
+    case MODE_PRODUCTIVITY_MENU:
+    case MODE_GAMES_MENU:
+    case MODE_TOOLS_MENU:
+    case MODE_SETTINGS_MENU:
+    case MODE_INFO_MENU:
       menu.draw();
       break;
       
+    // Productividad
     case MODE_POMODORO:
-      pomodoro.draw();
-      break;
-      
     case MODE_POMODORO_CONFIG:
       pomodoro.draw();
       break;
       
     case MODE_GYM:
       gym.draw();
+      break;
+      
+    case MODE_TASK_TIMER:
+      taskTimer.draw();
       break;
       
     case MODE_STATS: {
@@ -343,12 +459,86 @@ void updateUI() {
       break;
     }
       
-    case MODE_SETTINGS:
-      Screens::drawSettings();
+    // Juegos (placeholders)
+    case MODE_GAME_SNAKE:
+      handlePlaceholder("SNAKE");
+      break;
+    case MODE_GAME_PONG:
+      handlePlaceholder("PONG");
+      break;
+    case MODE_GAME_TETRIS:
+      handlePlaceholder("TETRIS");
+      break;
+    case MODE_GAME_FLAPPY:
+      handlePlaceholder("FLAPPY BIRD");
+      break;
+    case MODE_GAME_SPACE_INVADERS:
+      handlePlaceholder("SPACE INVADERS");
       break;
       
-    case MODE_INFO:
+    // Herramientas (placeholders)
+    case MODE_TOOL_STOPWATCH:
+      handlePlaceholder("CRONOMETRO");
+      break;
+    case MODE_TOOL_COUNTDOWN:
+      handlePlaceholder("CUENTA REGRESIVA");
+      break;
+    case MODE_TOOL_CALCULATOR:
+      handlePlaceholder("CALCULADORA");
+      break;
+    case MODE_TOOL_LEVEL:
+      handlePlaceholder("NIVEL");
+      break;
+    case MODE_TOOL_FLASHLIGHT:
+      handlePlaceholder("LINTERNA");
+      break;
+      
+    // Configuración (placeholders)
+    case MODE_SET_WIFI:
+      handlePlaceholder("CONFIG WIFI");
+      break;
+    case MODE_SET_DISPLAY:
+      handlePlaceholder("CONFIG DISPLAY");
+      break;
+    case MODE_SET_SOUND:
+      handlePlaceholder("CONFIG SONIDO");
+      break;
+    case MODE_SET_SENSORS:
+      handlePlaceholder("CONFIG SENSORES");
+      break;
+    case MODE_SET_RESET:
+      handlePlaceholder("RESET");
+      break;
+      
+    // Info
+    case MODE_INFO_SYSTEM:
       Screens::drawInfo();
+      if (input.getButtonEvent() == BTN_BACK_RELEASED) {
+        changeMode(MODE_MAIN_MENU);
+        menu.goToScreen(SCREEN_MAIN_MENU);
+      }
+      break;
+      
+    case MODE_INFO_WIFI:
+      handlePlaceholder("WIFI STATUS");
+      break;
+      
+    case MODE_INFO_GLOBAL_STATS: {
+      Statistics stats;
+      storage.loadStats(stats);
+      Screens::drawStats(stats);
+      if (input.getButtonEvent() == BTN_BACK_RELEASED) {
+        changeMode(MODE_MAIN_MENU);
+        menu.goToScreen(SCREEN_MAIN_MENU);
+      }
+      break;
+    }
+      
+    case MODE_INFO_ABOUT:
+      handlePlaceholder("ACERCA DE");
+      break;
+      
+    default:
       break;
   }
 }
@@ -361,14 +551,22 @@ void setup() {
   
   Serial.println("\n\n");
   Serial.println("================================");
-  Serial.println("   POMODORO TIMER v2.0");
+  Serial.println("   POMODORO TIMER v2.5");
   Serial.println("   ESP32 Modular System");
+  Serial.println("   New Menu Structure");
   Serial.println("================================");
   Serial.println();
   
   // Inicializar hardware
   Serial.println("Initializing hardware...");
+  
   display.begin();
+  
+  // Test visual
+  display.fillScreen(ST77XX_GREEN);
+  delay(300);
+  display.fillScreen(ST77XX_BLACK);
+  
   input.begin();
   output.begin();
   sensors.begin();
@@ -378,26 +576,28 @@ void setup() {
   Serial.println("Initializing UI...");
   menu.begin();
   
-  // Inicializar modos
-  Serial.println("Initializing modes...");
+  // Inicializar modos de productividad
+  Serial.println("Initializing productivity modes...");
   pomodoro.begin();
   gym.begin();
+  taskTimer.begin();
   
   // Pantalla de bienvenida
   display.clear();
-  display.drawCentered("POMODORO", 40, COLOR_PRIMARY, 3);
-  display.drawCentered("TIMER", 65, COLOR_PRIMARY, 3);
-  display.drawCentered("v2.0", 95, COLOR_TEXT, 1);
+  display.drawCentered("POMODORO", 35, COLOR_PRIMARY, 3);
+  display.drawCentered("TIMER", 60, COLOR_PRIMARY, 3);
+  display.drawCentered("v2.5", 90, COLOR_TEXT, 1);
+  display.drawCentered("New Menu!", 105, COLOR_SUCCESS, 1);
   
-  // Efectos de inicio
+  // Efectos
   output.setGreenLED(LED_BLINK_FAST);
   output.playSuccess();
-  delay(2000);
+  delay(2500);
   output.setGreenLED(LED_OFF);
   
-  // Ir al menú principal
+  // Ir al menú
   display.clear();
-  changeMode(MODE_MENU);
+  changeMode(MODE_MAIN_MENU);
   
   Serial.println();
   Serial.println("✅ System ready!");
@@ -405,7 +605,7 @@ void setup() {
   Serial.println();
 }
 
-// ===== LOOP PRINCIPAL =====
+// ===== LOOP =====
 
 void loop() {
   unsigned long now = millis();
@@ -417,38 +617,40 @@ void loop() {
   
   // Manejar modo actual
   switch (currentMode) {
-    case MODE_MENU:
+    // Menús
+    case MODE_MAIN_MENU:
+    case MODE_PRODUCTIVITY_MENU:
+    case MODE_GAMES_MENU:
+    case MODE_TOOLS_MENU:
+    case MODE_SETTINGS_MENU:
+    case MODE_INFO_MENU:
       handleMenuNavigation();
       break;
       
+    // Productividad
     case MODE_POMODORO:
       handlePomodoroMode();
       break;
-      
     case MODE_POMODORO_CONFIG:
       handlePomodoroConfigMode();
       break;
-      
     case MODE_GYM:
       handleGymMode();
       break;
-      
+    case MODE_TASK_TIMER:
+      handleTaskTimerMode();
+      break;
     case MODE_STATS:
       handleStatsMode();
       break;
       
-    case MODE_SETTINGS:
-      handleSettingsMode();
-      break;
-      
-    case MODE_INFO:
-      handleInfoMode();
+    default:
+      // Los placeholders se manejan en updateUI()
       break;
   }
   
   // Actualizar UI
   updateUI();
   
-  // Pequeño delay para no saturar el CPU
   delay(10);
 }

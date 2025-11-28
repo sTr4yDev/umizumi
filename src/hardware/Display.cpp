@@ -1,6 +1,6 @@
 #include "Display.h"
 
-// ✅ Instancia GLOBAL del TFT (igual que el test que funcionó)
+// ✅ Instancia GLOBAL del TFT
 Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_TFT_DC, PIN_TFT_RST);
 
 // Instancia del wrapper Display
@@ -9,7 +9,6 @@ Display display;
 void Display::begin() {
   Serial.println("Initializing display...");
   
-  // ✅ Igual que el test debug que funcionó
   tft.initR(INITR_BLACKTAB);
   tft.fillScreen(ST77XX_BLACK);
   tft.setRotation(1);
@@ -24,6 +23,23 @@ void Display::clear() {
 
 void Display::setRotation(uint8_t rotation) {
   tft.setRotation(rotation);
+}
+
+// ⭐ NUEVOS - Métodos directos de texto
+void Display::setTextSize(uint8_t size) {
+  tft.setTextSize(size);
+}
+
+void Display::setTextColor(uint16_t color) {
+  tft.setTextColor(color);
+}
+
+void Display::setTextColor(uint16_t color, uint16_t bg) {
+  tft.setTextColor(color, bg);
+}
+
+void Display::setCursor(int16_t x, int16_t y) {
+  tft.setCursor(x, y);
 }
 
 void Display::drawText(const char* text, int x, int y, uint16_t color, uint8_t size) {

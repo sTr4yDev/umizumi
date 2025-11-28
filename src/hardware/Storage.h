@@ -1,8 +1,8 @@
 #ifndef STORAGE_H
 #define STORAGE_H
 
+#include <Arduino.h>
 #include <Preferences.h>
-#include "../config/settings.h"
 
 struct PomodoroConfig {
   uint16_t workTime;      // Segundos
@@ -17,32 +17,51 @@ struct GymConfig {
 };
 
 struct Statistics {
-  uint32_t pomodorosCompleted;
-  uint32_t gymSeriesCompleted;
-  uint32_t soundInterruptions;
-  uint32_t totalWorkTime;      // Segundos totales trabajados
+  // Pomodoro
+  unsigned long pomodorosCompleted;
+  unsigned long totalWorkTime;        // segundos
+  unsigned long totalBreakTime;       // segundos
+  
+  // Gym
+  unsigned long gymSessions;
+  unsigned long totalGymTime;         // segundos
+  unsigned long gymSeriesCompleted;
+  unsigned long soundInterruptions;
+  
+  // TaskTimer
+  unsigned long tasksCompleted;
+  unsigned long totalTaskTime;        // segundos
+  
+  // General
+  unsigned long lastUpdate;
 };
 
 class Storage {
 public:
   void begin();
   
-  // Pomodoro
+  // Pomodoro Configuration
   void loadPomodoroConfig(PomodoroConfig &config);
   void savePomodoroConfig(const PomodoroConfig &config);
   
-  // Gym
+  // Gym Configuration  
   void loadGymConfig(GymConfig &config);
   void saveGymConfig(const GymConfig &config);
   
-  // Estadísticas
+  // Alternative Pomodoro config methods (for compatibility)
+  void savePomodoroConfig(int work, int shortBreak, int longBreak);
+  void loadPomodoroConfig(int& work, int& shortBreak, int& longBreak);
+  
+  // Statistics
   void loadStats(Statistics &stats);
-  void saveStats(const Statistics &stats);
+  void saveStats(Statistics &stats);
+  void resetStats();
+  
+  // Statistics increment methods
   void incrementPomodoros();
   void incrementGymSeries();
   void incrementInterruptions();
   void addWorkTime(uint32_t seconds);
-  void resetStats();
   
 private:
   Preferences prefs;

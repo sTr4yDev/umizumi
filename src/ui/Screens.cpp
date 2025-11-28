@@ -1,5 +1,65 @@
 #include "Screens.h"
 
+// ===== ESTADÍSTICAS (VERSIÓN ÚNICA) =====
+void Screens::drawStats(Statistics& stats) {
+  display.clear();
+  
+  // Header
+  display.fillRect(0, 0, display.getWidth(), 22, COLOR_PRIMARY);
+  display.drawCentered("ESTADISTICAS", 7, ST77XX_WHITE, 1);
+  
+  // Pomodoro Stats
+  display.setTextSize(1);
+  display.setTextColor(COLOR_SUCCESS);
+  display.setCursor(4, 28);
+  tft.print("Pomodoro:");
+  
+  display.setTextColor(COLOR_TEXT);
+  char line[32];
+  
+  snprintf(line, sizeof(line), "Completados: %d", stats.pomodorosCompleted);
+  display.drawText(line, 4, 40, COLOR_TEXT, 1);
+  
+  int hours = stats.totalWorkTime / 60;
+  int mins = stats.totalWorkTime % 60;
+  snprintf(line, sizeof(line), "Tiempo: %dh %dm", hours, mins);
+  display.drawText(line, 4, 50, COLOR_TEXT, 1);
+  
+  // Gym Stats
+  display.setTextColor(COLOR_WARNING);
+  display.setCursor(4, 65);
+  tft.print("Gym:");
+  
+  snprintf(line, sizeof(line), "Sesiones: %d", stats.gymSessions);
+  display.drawText(line, 4, 77, COLOR_TEXT, 1);
+  
+  hours = stats.totalGymTime / 3600;
+  mins = (stats.totalGymTime % 3600) / 60;
+  snprintf(line, sizeof(line), "Tiempo: %dh %dm", hours, mins);
+  display.drawText(line, 4, 87, COLOR_TEXT, 1);
+  
+  snprintf(line, sizeof(line), "Series: %lu", stats.gymSeriesCompleted);
+  display.drawText(line, 4, 97, COLOR_TEXT, 1);
+  
+  // TaskTimer Stats
+  display.setTextColor(COLOR_SECONDARY);
+  display.setCursor(4, 110);
+  tft.print("Tareas:");
+  
+  snprintf(line, sizeof(line), "Completadas: %d", stats.tasksCompleted);
+  display.drawText(line, 4, 122, COLOR_TEXT, 1);
+  
+  hours = stats.totalTaskTime / 3600;
+  mins = (stats.totalTaskTime % 3600) / 60;
+  snprintf(line, sizeof(line), "Tiempo: %dh %dm", hours, mins);
+  display.drawText(line, 4, 132, COLOR_TEXT, 1);
+  
+  // Footer
+  display.drawText("LONG: Reset", 4, display.getHeight() - 20, COLOR_DANGER, 1);
+  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
+}
+
+// ===== CONFIGURACIÓN POMODORO =====
 void Screens::drawPomodoroConfig(PomodoroConfig &config, int selectedField) {
   display.clear();
   
@@ -53,6 +113,7 @@ void Screens::drawPomodoroConfig(PomodoroConfig &config, int selectedField) {
   display.drawRightAligned("BACK: Salir", display.getHeight() - 10, COLOR_INFO, 1);
 }
 
+// ===== POMODORO CORRIENDO =====
 void Screens::drawPomodoroRunning(const char* state, unsigned long timeLeft, uint32_t pomodorosCount) {
   display.clear();
   
@@ -74,8 +135,8 @@ void Screens::drawPomodoroRunning(const char* state, unsigned long timeLeft, uin
   snprintf(timerStr, sizeof(timerStr), "%02d:%02d", minutes, seconds);
   display.drawCentered(timerStr, 55, COLOR_TEXT, 3);
   
-  // Barra de progreso (ejemplo: 25min = 100%)
-  int totalTime = 25 * 60; // Asumiendo 25 min por defecto
+  // Barra de progreso
+  int totalTime = 25 * 60;
   int percent = 100 - ((timeLeft * 100) / totalTime);
   if (percent < 0) percent = 0;
   if (percent > 100) percent = 100;
@@ -91,6 +152,7 @@ void Screens::drawPomodoroRunning(const char* state, unsigned long timeLeft, uin
   display.drawText("SELECT: Start/Pause", 4, display.getHeight() - 10, COLOR_INFO, 1);
 }
 
+// ===== GYM CORRIENDO =====
 void Screens::drawGymRunning(unsigned long elapsed, uint32_t seriesCount) {
   display.clear();
   
@@ -115,38 +177,7 @@ void Screens::drawGymRunning(unsigned long elapsed, uint32_t seriesCount) {
   display.drawText("BACK: Menu", 8, 122, COLOR_INFO, 1);
 }
 
-void Screens::drawStats(const Statistics &stats) {
-  display.clear();
-  
-  // Título
-  display.drawCentered("ESTADISTICAS", 8, COLOR_PRIMARY, 2);
-  display.drawLine(10, 26, display.getWidth() - 10, 26, COLOR_PRIMARY);
-  
-  char line[32];
-  
-  // Pomodoros
-  snprintf(line, sizeof(line), "Pomodoros: %lu", stats.pomodorosCompleted);
-  display.drawText(line, 8, 36, COLOR_TEXT, 1);
-  
-  // Gym series
-  snprintf(line, sizeof(line), "Series Gym: %lu", stats.gymSeriesCompleted);
-  display.drawText(line, 8, 52, COLOR_TEXT, 1);
-  
-  // Interrupciones
-  snprintf(line, sizeof(line), "Interrupciones: %lu", stats.soundInterruptions);
-  display.drawText(line, 8, 68, COLOR_TEXT, 1);
-  
-  // Tiempo total trabajado
-  uint32_t hours = stats.totalWorkTime / 3600;
-  uint32_t minutes = (stats.totalWorkTime % 3600) / 60;
-  snprintf(line, sizeof(line), "Tiempo total: %luh %lum", hours, minutes);
-  display.drawText(line, 8, 84, COLOR_TEXT, 1);
-  
-  // Botón para resetear
-  display.drawCentered("LONG PRESS: Reset", 110, COLOR_DANGER, 1);
-  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
-}
-
+// ===== CONFIGURACIÓN =====
 void Screens::drawSettings() {
   display.clear();
   
@@ -160,6 +191,7 @@ void Screens::drawSettings() {
   display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
 }
 
+// ===== INFO =====
 void Screens::drawInfo() {
   display.clear();
   
@@ -167,7 +199,7 @@ void Screens::drawInfo() {
   display.drawLine(10, 26, display.getWidth() - 10, 26, COLOR_PRIMARY);
   
   display.drawText("Pomodoro Timer", 8, 40, COLOR_TEXT, 1);
-  display.drawText("Version: 2.0.0", 8, 56, COLOR_TEXT, 1);
+  display.drawText("Version: 2.5.0", 8, 56, COLOR_TEXT, 1);
   display.drawText("Hardware: ESP32", 8, 72, COLOR_TEXT, 1);
   
   char uptime[32];
@@ -180,6 +212,7 @@ void Screens::drawInfo() {
   display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
 }
 
+// ===== UTILIDADES =====
 void Screens::drawProgressBar(int x, int y, int width, int height, int percent, uint16_t color) {
   // Borde
   display.drawRect(x, y, width, height, COLOR_TEXT);
@@ -196,7 +229,7 @@ void Screens::drawProgressBar(int x, int y, int width, int height, int percent, 
   
   int16_t x1, y1;
   uint16_t w, h;
-  display.getTFT()->getTextBounds(percentStr, 0, 0, &x1, &y1, &w, &h);
+  tft.getTextBounds(percentStr, 0, 0, &x1, &y1, &w, &h);
   
   int textX = x + (width - w) / 2;
   int textY = y + height + 2;

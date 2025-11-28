@@ -9,18 +9,13 @@ void Menu::begin() {
   lastPotValue = 0;
   needsRedraw = true;
   
-  // ✅ Inicializar sistema de notificación
-  screenChanged = false;
-  pendingScreen = SCREEN_MAIN_MENU;
-  
-  Serial.println("Menu system initialized");
+  Serial.println("Menu system initialized (New structure)");
 }
 
 void Menu::update() {
   // Leer potenciómetro
-  int potValue = input.getPotPosition(); // 0-100
+  int potValue = input.getPotPosition();
   
-  // Detectar cambio significativo
   if (abs(potValue - lastPotValue) > 5) {
     handlePotChange(potValue);
     lastPotValue = potValue;
@@ -42,7 +37,6 @@ void Menu::update() {
       break;
   }
   
-  // Redibujar si es necesario
   if (needsRedraw) {
     draw();
     needsRedraw = false;
@@ -55,71 +49,206 @@ void Menu::draw() {
       drawMainMenu();
       break;
       
-    // Otros screens se manejarán en Screens.cpp
+    case SCREEN_PRODUCTIVITY_MENU:
+      drawProductivityMenu();
+      break;
+      
+    case SCREEN_GAMES_MENU:
+      drawGamesMenu();
+      break;
+      
+    case SCREEN_TOOLS_MENU:
+      drawToolsMenu();
+      break;
+      
+    case SCREEN_SETTINGS_MENU:
+      drawSettingsMenu();
+      break;
+      
+    case SCREEN_INFO_MENU:
+      drawInfoMenu();
+      break;
+      
     default:
       break;
   }
 }
 
+// ===== DIBUJAR MENÚ PRINCIPAL =====
+
 void Menu::drawMainMenu() {
   display.clear();
+  drawHeader("MENU PRINCIPAL", COLOR_PRIMARY);
   
-  // Título
-  display.drawCentered("MENU PRINCIPAL", 8, COLOR_PRIMARY, 2);
-  
-  // Línea separadora
-  display.drawLine(10, 28, display.getWidth() - 10, 28, COLOR_PRIMARY);
-  
-  // Opciones
   const char* options[] = {
-    "Pomodoro",
-    "Gym Mode",
-    "Config",
-    "Stats",
-    "Info"
+    "PRODUCTIVIDAD",
+    "JUEGOS",
+    "HERRAMIENTAS",
+    "CONFIGURACION",
+    "INFO"
   };
   
-  int startY = 40;
-  int spacing = 16;
-  
-  for (int i = 0; i < MENU_OPTION_COUNT; i++) {
+  for (int i = 0; i < MAIN_OPTION_COUNT; i++) {
     drawMenuOption(options[i], i, i == selectedOption);
   }
   
-  // Indicador de navegación
+  // Footer
   display.drawText("POT: Navegar", 4, display.getHeight() - 10, COLOR_INFO, 1);
   display.drawRightAligned("SELECT: OK", display.getHeight() - 10, COLOR_INFO, 1);
 }
 
-void Menu::drawMenuOption(const char* text, int index, bool selected) {
-  int y = 40 + (index * 16);
+// ===== DIBUJAR SUBMENÚ PRODUCTIVIDAD =====
+
+void Menu::drawProductivityMenu() {
+  display.clear();
+  drawHeader("PRODUCTIVIDAD", COLOR_SUCCESS);
+  
+  const char* options[] = {
+    "Pomodoro Timer",
+    "Gym Mode",
+    "Task Timer",
+    "Estadisticas"
+  };
+  
+  for (int i = 0; i < PROD_OPTION_COUNT; i++) {
+    drawMenuOption(options[i], i, i == selectedOption);
+  }
+  
+  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
+}
+
+// ===== DIBUJAR SUBMENÚ JUEGOS =====
+
+void Menu::drawGamesMenu() {
+  display.clear();
+  drawHeader("JUEGOS", COLOR_WARNING);
+  
+  const char* options[] = {
+    "Snake",
+    "Pong",
+    "Tetris",
+    "Flappy Bird",
+    "Space Invaders"
+  };
+  
+  for (int i = 0; i < GAME_OPTION_COUNT; i++) {
+    drawMenuOption(options[i], i, i == selectedOption);
+  }
+  
+  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
+}
+
+// ===== DIBUJAR SUBMENÚ HERRAMIENTAS =====
+
+void Menu::drawToolsMenu() {
+  display.clear();
+  drawHeader("HERRAMIENTAS", COLOR_SECONDARY);
+  
+  const char* options[] = {
+    "Cronometro",
+    "Cuenta Regresiva",
+    "Calculadora",
+    "Nivel",
+    "Linterna"
+  };
+  
+  for (int i = 0; i < TOOL_OPTION_COUNT; i++) {
+    drawMenuOption(options[i], i, i == selectedOption);
+  }
+  
+  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
+}
+
+// ===== DIBUJAR SUBMENÚ CONFIGURACIÓN =====
+
+void Menu::drawSettingsMenu() {
+  display.clear();
+  drawHeader("CONFIGURACION", COLOR_PRIMARY);
+  
+  const char* options[] = {
+    "WiFi",
+    "Display",
+    "Sonido",
+    "Sensores",
+    "Reset"
+  };
+  
+  for (int i = 0; i < SET_OPTION_COUNT; i++) {
+    drawMenuOption(options[i], i, i == selectedOption);
+  }
+  
+  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
+}
+
+// ===== DIBUJAR SUBMENÚ INFO =====
+
+void Menu::drawInfoMenu() {
+  display.clear();
+  drawHeader("INFORMACION", COLOR_INFO);
+  
+  const char* options[] = {
+    "Sistema",
+    "WiFi Status",
+    "Stats Globales",
+    "Acerca de"
+  };
+  
+  for (int i = 0; i < INFO_OPTION_COUNT; i++) {
+    drawMenuOption(options[i], i, i == selectedOption);
+  }
+  
+  display.drawText("BACK: Menu", 4, display.getHeight() - 10, COLOR_INFO, 1);
+}
+
+// ===== UTILIDADES =====
+
+void Menu::drawHeader(const char* title, uint16_t color) {
+  display.fillRect(0, 0, display.getWidth(), 22, color);
+  display.setTextSize(1);
+  display.setTextColor(ST77XX_WHITE);
+  
+  int16_t x1, y1;
+  uint16_t w, h;
+  display.getTFT()->getTextBounds(title, 0, 0, &x1, &y1, &w, &h);
+  int x = (display.getWidth() - w) / 2;
+  
+  display.getTFT()->setCursor(x, 7);
+  display.getTFT()->print(title);
+  
+  // Línea separadora
+  display.drawLine(0, 22, display.getWidth(), 22, ST77XX_WHITE);
+}
+
+void Menu::drawMenuOption(const char* text, int index, bool selected, int yOffset) {
+  int y = yOffset + (index * 16);
   
   if (selected) {
     // Fondo de selección
-    display.fillRect(8, y - 2, display.getWidth() - 16, 14, COLOR_MENU_SELECT);
+    display.fillRect(4, y - 2, display.getWidth() - 8, 14, COLOR_MENU_SELECT);
     
     // Cursor
-    display.drawText(">", 12, y, COLOR_BG, 1);
+    display.drawText(">", 8, y, COLOR_BG, 1);
     
     // Texto
-    display.drawText(text, 24, y, COLOR_BG, 1);
+    display.drawText(text, 20, y, COLOR_BG, 1);
   } else {
     // Texto normal
-    display.drawText(text, 24, y, COLOR_MENU_TEXT, 1);
+    display.drawText(text, 20, y, COLOR_MENU_TEXT, 1);
   }
 }
+
+// ===== NAVEGACIÓN =====
 
 void Menu::goToScreen(MenuScreen screen) {
   previousScreen = currentScreen;
   currentScreen = screen;
+  selectedOption = 0; // Reset selección al cambiar de menú
   needsRedraw = true;
   
-  // ✅ Notificar cambio de pantalla
-  screenChanged = true;
-  pendingScreen = screen;
-  
-  Serial.print("Menu: Screen changed to ");
-  Serial.println(screen);
+  Serial.print("Screen changed: ");
+  Serial.print(previousScreen);
+  Serial.print(" -> ");
+  Serial.println(currentScreen);
 }
 
 MenuScreen Menu::getCurrentScreen() {
@@ -130,32 +259,47 @@ int Menu::getSelectedOption() {
   return selectedOption;
 }
 
-// ✅ NUEVO: Sistema de notificación
-bool Menu::hasScreenChanged() {
-  return screenChanged;
-}
-
-MenuScreen Menu::getPendingScreen() {
-  return pendingScreen;
-}
-
-void Menu::clearScreenChange() {
-  screenChanged = false;
-}
-
 void Menu::handlePotChange(int value) {
-  // Mapear 0-100 a opciones del menú
-  if (currentScreen == SCREEN_MAIN_MENU) {
-    int newOption = map(value, 0, 100, 0, MENU_OPTION_COUNT - 1);
-    
-    if (newOption != selectedOption) {
-      selectedOption = newOption;
-      needsRedraw = true;
-      output.playBeep();
+  if (value < 0 || value > 100) return;
+  
+  int newOption = selectedOption;
+  
+  switch (currentScreen) {
+    case SCREEN_MAIN_MENU:
+      newOption = map(value, 0, 100, 0, MAIN_OPTION_COUNT - 1);
+      break;
       
-      Serial.print("Option selected: ");
-      Serial.println(selectedOption);
-    }
+    case SCREEN_PRODUCTIVITY_MENU:
+      newOption = map(value, 0, 100, 0, PROD_OPTION_COUNT - 1);
+      break;
+      
+    case SCREEN_GAMES_MENU:
+      newOption = map(value, 0, 100, 0, GAME_OPTION_COUNT - 1);
+      break;
+      
+    case SCREEN_TOOLS_MENU:
+      newOption = map(value, 0, 100, 0, TOOL_OPTION_COUNT - 1);
+      break;
+      
+    case SCREEN_SETTINGS_MENU:
+      newOption = map(value, 0, 100, 0, SET_OPTION_COUNT - 1);
+      break;
+      
+    case SCREEN_INFO_MENU:
+      newOption = map(value, 0, 100, 0, INFO_OPTION_COUNT - 1);
+      break;
+      
+    default:
+      return;
+  }
+  
+  // Clamp
+  if (newOption < 0) newOption = 0;
+  
+  if (newOption != selectedOption) {
+    selectedOption = newOption;
+    needsRedraw = true;
+    output.playBeep();
   }
 }
 
@@ -165,39 +309,99 @@ void Menu::handleSelectButton() {
   delay(100);
   output.setGreenLED(LED_OFF);
   
-  Serial.print("Menu: SELECT pressed on option ");
-  Serial.println(selectedOption);
-  
+  // Desde Menú Principal
   if (currentScreen == SCREEN_MAIN_MENU) {
     switch (selectedOption) {
-      case MENU_POMODORO:
+      case MAIN_PRODUCTIVITY:
+        goToScreen(SCREEN_PRODUCTIVITY_MENU);
+        break;
+        
+      case MAIN_GAMES:
+        goToScreen(SCREEN_GAMES_MENU);
+        break;
+        
+      case MAIN_TOOLS:
+        goToScreen(SCREEN_TOOLS_MENU);
+        break;
+        
+      case MAIN_SETTINGS:
+        goToScreen(SCREEN_SETTINGS_MENU);
+        break;
+        
+      case MAIN_INFO:
+        goToScreen(SCREEN_INFO_MENU);
+        break;
+    }
+    return;
+  }
+  
+  // Desde Submenú Productividad
+  if (currentScreen == SCREEN_PRODUCTIVITY_MENU) {
+    switch (selectedOption) {
+      case PROD_POMODORO:
         goToScreen(SCREEN_POMODORO_CONFIG);
         break;
         
-      case MENU_GYM:
+      case PROD_GYM:
         goToScreen(SCREEN_GYM_RUNNING);
         break;
         
-      case MENU_SETTINGS:
-        goToScreen(SCREEN_SETTINGS);
+      case PROD_TASK_TIMER:
+        goToScreen(SCREEN_TASK_TIMER);
         break;
         
-      case MENU_STATS:
+      case PROD_STATS:
         goToScreen(SCREEN_STATS);
         break;
+    }
+    return;
+  }
+  
+  // Desde Submenú Juegos
+  if (currentScreen == SCREEN_GAMES_MENU) {
+    switch (selectedOption) {
+      case GAME_SNAKE:
+        goToScreen(SCREEN_GAME_SNAKE);
+        break;
         
-      case MENU_INFO:
-        goToScreen(SCREEN_INFO);
+      case GAME_PONG:
+        goToScreen(SCREEN_GAME_PONG);
+        break;
+        
+      case GAME_TETRIS:
+        goToScreen(SCREEN_GAME_TETRIS);
+        break;
+        
+      case GAME_FLAPPY:
+        goToScreen(SCREEN_GAME_FLAPPY);
+        break;
+        
+      case GAME_SPACE_INVADERS:
+        goToScreen(SCREEN_GAME_SPACE_INVADERS);
         break;
     }
+    return;
   }
+  
+  // (Continúa para otros submenús...)
 }
 
 void Menu::handleBackButton() {
   output.playBeep();
   
-  // Regresar al menú principal desde cualquier pantalla
+  // Si estamos en un submenú, volver al menú principal
   if (currentScreen != SCREEN_MAIN_MENU) {
-    goToScreen(SCREEN_MAIN_MENU);
+    // Determinar si estamos en un submenú
+    if (currentScreen >= SCREEN_PRODUCTIVITY_MENU && currentScreen <= SCREEN_STATS) {
+      goToScreen(SCREEN_MAIN_MENU);
+    } else if (currentScreen >= SCREEN_GAMES_MENU && currentScreen <= SCREEN_GAME_SPACE_INVADERS) {
+      goToScreen(SCREEN_MAIN_MENU);
+    } else if (currentScreen >= SCREEN_TOOLS_MENU && currentScreen <= SCREEN_TOOL_FLASHLIGHT) {
+      goToScreen(SCREEN_MAIN_MENU);
+    } else if (currentScreen >= SCREEN_SETTINGS_MENU && currentScreen <= SCREEN_SET_RESET) {
+      goToScreen(SCREEN_MAIN_MENU);
+    } else if (currentScreen >= SCREEN_INFO_MENU && currentScreen <= SCREEN_INFO_ABOUT) {
+      goToScreen(SCREEN_MAIN_MENU);
+    }
   }
 }

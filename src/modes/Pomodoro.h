@@ -2,11 +2,12 @@
 #define POMODORO_H
 
 #include <Arduino.h>
-#include "../hardware/Storage.h"
 #include "../hardware/Output.h"
 #include "../hardware/Display.h"
-#include "../ui/Screens.h"
+#include "../hardware/Storage.h"
+#include "../config/colors.h"
 
+// ===== ESTADOS DEL POMODORO =====
 enum PomodoroState {
   POM_IDLE,
   POM_RUNNING,
@@ -29,34 +30,32 @@ public:
   void stop();
   void skipBreak();
   
-  // Estado
-  PomodoroState getState();
-  const char* getStateString();
-  unsigned long getTimeLeft();
-  uint32_t getPomodorosCompleted();
-  
   // Configuración
   void enterConfigMode();
   void exitConfigMode();
-  bool isInConfigMode();
-  void adjustConfigValue(int potValue);
   void nextConfigField();
+  void adjustConfigValue(int potValue);
   void saveConfiguration();
+  
+  // Estado
+  PomodoroState getState();
+  unsigned long getTimeLeft();
+  const char* getStateString();
   
 private:
   PomodoroState state;
   PomodoroConfig config;
-  Statistics stats;
   
-  unsigned long stateStartTime;
-  unsigned long sessionDuration;
-  unsigned long pausedTimeRemaining;
+  unsigned long startTime;
+  unsigned long pausedTime;
+  unsigned long totalPausedTime;
+  unsigned long timeRemaining;
   
-  uint8_t cycleCount; // Cuenta ciclos para long break
+  int pomodorosCompleted;
+  int currentCycle;
   
-  bool configMode;
-  int configField; // 0=work, 1=short, 2=long, 3=cycles
-  int lastConfigPotValue;
+  bool inConfigMode;
+  int selectedField;
   
   void transitionTo(PomodoroState newState);
   void finishPomodoro();

@@ -5,12 +5,7 @@
 #include "../config/pins.h"
 #include "../config/settings.h"
 
-enum LEDState {
-  LED_OFF,
-  LED_ON,
-  LED_BLINK_FAST,
-  LED_BLINK_SLOW
-};
+// ⭐ NO definir LEDState aquí, está en pins.h
 
 class Output {
 public:
@@ -20,30 +15,24 @@ public:
   // LEDs
   void setGreenLED(LEDState state);
   void setRedLED(LEDState state);
-  void greenOn();
-  void greenOff();
-  void redOn();
-  void redOff();
   void allLedsOff();
   
   // Buzzer
+  void playTone(int freq, int duration);
   void playBeep();
-  void playError();
   void playSuccess();
-  void playPomodoroComplete();
-  void playBreakTime();
-  void stopBuzzer();
+  void playWarning();
+  void playError();
   
 private:
-  // LEDs
-  LEDState greenState;
-  LEDState redState;
-  bool greenLEDOn;
-  bool redLEDOn;
-  unsigned long lastGreenBlink;
-  unsigned long lastRedBlink;
+  void updateLED(uint8_t pin, LEDState state, bool& ledState, unsigned long& lastBlink);
   
-  void updateLED(uint8_t pin, LEDState state, bool &ledOn, unsigned long &lastBlink);
+  bool greenLedState;
+  bool redLedState;
+  unsigned long greenLastBlink;
+  unsigned long redLastBlink;
+  LEDState greenLedMode;
+  LEDState redLedMode;
 };
 
 extern Output output;

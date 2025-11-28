@@ -34,6 +34,10 @@ void Input::update() {
   // Leer potenciómetro con suavizado
   potRaw = analogRead(PIN_POT);
   
+  // ⭐ PROTECCIÓN: Limitar rango válido
+  if (potRaw < 0) potRaw = 0;
+  if (potRaw > 4095) potRaw = 4095;
+  
   // Promediar muestras
   potSamples[potIndex] = potRaw;
   potIndex = (potIndex + 1) % POT_SAMPLES;
@@ -44,7 +48,11 @@ void Input::update() {
   }
   potSmoothed = sum / POT_SAMPLES;
   
-  // Leer botones
+  // ⭐ FILTRO ANTI-RUIDO: Ignorar valores extremos anormales
+  if (potSmoothed < 10) potSmoothed = 0;
+  if (potSmoothed > 4085) potSmoothed = 4095;
+  
+  // Leer botones (invertido porque usamos INPUT_PULLUP)
   btnSelectState = digitalRead(PIN_BTN_SELECT);
   btnBackState = digitalRead(PIN_BTN_BACK);
 }
@@ -55,7 +63,13 @@ int Input::getPotValue() {
 
 int Input::getPotPosition() {
   // Convertir 0-4095 a 0-100
-  return map(potSmoothed, 0, 4095, 0, 100);
+  int pos = map(potSmoothed, 0, 4095, 0, 100);
+  
+  // ⭐ CLAMP: Asegurar que esté en rango
+  if (pos < 0) pos = 0;
+  if (pos > 100) pos = 100;
+  
+  return pos;
 }
 
 bool Input::potChanged() {

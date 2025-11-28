@@ -1,18 +1,21 @@
 #include "Display.h"
 
+// ✅ Instancia GLOBAL del TFT (igual que el test que funcionó)
+Adafruit_ST7735 tft = Adafruit_ST7735(PIN_TFT_CS, PIN_TFT_DC, PIN_TFT_RST);
+
+// Instancia del wrapper Display
 Display display;
 
-Display::Display() : tft(PIN_TFT_CS, PIN_TFT_DC, PIN_TFT_RST) {
-}
-
 void Display::begin() {
+  Serial.println("Initializing display...");
   
+  // ✅ Igual que el test debug que funcionó
   tft.initR(INITR_BLACKTAB);
   tft.fillScreen(ST77XX_BLACK);
-  tft.setRotation(1); // Horizontal
+  tft.setRotation(1);
   tft.setTextWrap(false);
   
-  Serial.println("Display initialized");
+  Serial.println("Display initialized ✓");
 }
 
 void Display::clear() {

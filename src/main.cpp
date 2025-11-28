@@ -1,4 +1,3 @@
-//Hola 
 #include <Arduino.h>
 
 // Configuración
@@ -361,7 +360,14 @@ void setup() {
   
   // Inicializar hardware
   Serial.println("Initializing hardware...");
+  
   display.begin();
+  
+  // ⭐ Test visual rápido - Confirmar display funciona
+  display.fillScreen(ST77XX_GREEN);
+  delay(300);
+  display.fillScreen(ST77XX_BLACK);
+  
   input.begin();
   output.begin();
   sensors.begin();

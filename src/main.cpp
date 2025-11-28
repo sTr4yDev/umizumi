@@ -92,18 +92,22 @@ void handleMenuNavigation() {
   // El menú maneja su propia navegación
   menu.update();
   
-  // Detectar si se seleccionó una opción
-  MenuScreen screen = menu.getCurrentScreen();
-  
-  static MenuScreen lastScreen = SCREEN_MAIN_MENU;
-  
-  if (screen != lastScreen) {
-    lastScreen = screen;
+  // ✅ CORREGIDO: Usar sistema de notificación en lugar de verificación estática
+  if (menu.hasScreenChanged()) {
+    MenuScreen screen = menu.getPendingScreen();
+    menu.clearScreenChange();
+    
+    Serial.print("Main: Processing screen change to ");
+    Serial.println(screen);
     
     // Cambiar modo según pantalla seleccionada
     switch (screen) {
       case SCREEN_POMODORO_CONFIG:
         changeMode(MODE_POMODORO_CONFIG);
+        break;
+        
+      case SCREEN_POMODORO_RUNNING:
+        changeMode(MODE_POMODORO);
         break;
         
       case SCREEN_GYM_RUNNING:
@@ -122,6 +126,10 @@ void handleMenuNavigation() {
         changeMode(MODE_INFO);
         break;
         
+      case SCREEN_MAIN_MENU:
+        changeMode(MODE_MENU);
+        break;
+        
       default:
         break;
     }
@@ -130,6 +138,20 @@ void handleMenuNavigation() {
 
 void handlePomodoroConfigMode() {
   ButtonEvent event = input.getButtonEvent();
+  
+  // ✅ DEBUG: Mostrar eventos recibidos en modo configuración
+  if (event != BTN_NONE) {
+    Serial.print("🎮 PomodoroConfig received: ");
+    switch(event) {
+      case BTN_SELECT_PRESSED: Serial.println("SELECT_PRESSED"); break;
+      case BTN_SELECT_RELEASED: Serial.println("SELECT_RELEASED"); break;
+      case BTN_SELECT_LONG_PRESS: Serial.println("SELECT_LONG_PRESS"); break;
+      case BTN_BACK_PRESSED: Serial.println("BACK_PRESSED"); break;
+      case BTN_BACK_RELEASED: Serial.println("BACK_RELEASED"); break;
+      case BTN_BACK_LONG_PRESS: Serial.println("BACK_LONG_PRESS"); break;
+      default: Serial.println("UNKNOWN"); break;
+    }
+  }
   
   switch (event) {
     case BTN_SELECT_RELEASED:
@@ -162,6 +184,20 @@ void handlePomodoroConfigMode() {
 
 void handlePomodoroMode() {
   ButtonEvent event = input.getButtonEvent();
+  
+  // ✅ DEBUG: Mostrar eventos recibidos en modo pomodoro
+  if (event != BTN_NONE) {
+    Serial.print("🎮 Pomodoro received: ");
+    switch(event) {
+      case BTN_SELECT_PRESSED: Serial.println("SELECT_PRESSED"); break;
+      case BTN_SELECT_RELEASED: Serial.println("SELECT_RELEASED"); break;
+      case BTN_SELECT_LONG_PRESS: Serial.println("SELECT_LONG_PRESS"); break;
+      case BTN_BACK_PRESSED: Serial.println("BACK_PRESSED"); break;
+      case BTN_BACK_RELEASED: Serial.println("BACK_RELEASED"); break;
+      case BTN_BACK_LONG_PRESS: Serial.println("BACK_LONG_PRESS"); break;
+      default: Serial.println("UNKNOWN"); break;
+    }
+  }
   
   switch (event) {
     case BTN_SELECT_RELEASED:
@@ -212,6 +248,20 @@ void handlePomodoroMode() {
 void handleGymMode() {
   ButtonEvent event = input.getButtonEvent();
   
+  // ✅ DEBUG: Mostrar eventos recibidos en modo gym
+  if (event != BTN_NONE) {
+    Serial.print("🎮 Gym received: ");
+    switch(event) {
+      case BTN_SELECT_PRESSED: Serial.println("SELECT_PRESSED"); break;
+      case BTN_SELECT_RELEASED: Serial.println("SELECT_RELEASED"); break;
+      case BTN_SELECT_LONG_PRESS: Serial.println("SELECT_LONG_PRESS"); break;
+      case BTN_BACK_PRESSED: Serial.println("BACK_PRESSED"); break;
+      case BTN_BACK_RELEASED: Serial.println("BACK_RELEASED"); break;
+      case BTN_BACK_LONG_PRESS: Serial.println("BACK_LONG_PRESS"); break;
+      default: Serial.println("UNKNOWN"); break;
+    }
+  }
+  
   switch (event) {
     case BTN_SELECT_RELEASED:
       // Manual start/pause (alternativo al CLAP)
@@ -243,6 +293,20 @@ void handleGymMode() {
 
 void handleStatsMode() {
   ButtonEvent event = input.getButtonEvent();
+  
+  // ✅ DEBUG: Mostrar eventos recibidos en modo stats
+  if (event != BTN_NONE) {
+    Serial.print("🎮 Stats received: ");
+    switch(event) {
+      case BTN_SELECT_PRESSED: Serial.println("SELECT_PRESSED"); break;
+      case BTN_SELECT_RELEASED: Serial.println("SELECT_RELEASED"); break;
+      case BTN_SELECT_LONG_PRESS: Serial.println("SELECT_LONG_PRESS"); break;
+      case BTN_BACK_PRESSED: Serial.println("BACK_PRESSED"); break;
+      case BTN_BACK_RELEASED: Serial.println("BACK_RELEASED"); break;
+      case BTN_BACK_LONG_PRESS: Serial.println("BACK_LONG_PRESS"); break;
+      default: Serial.println("UNKNOWN"); break;
+    }
+  }
   
   switch (event) {
     case BTN_SELECT_LONG_PRESS:
@@ -277,6 +341,20 @@ void handleStatsMode() {
 void handleSettingsMode() {
   ButtonEvent event = input.getButtonEvent();
   
+  // ✅ DEBUG: Mostrar eventos recibidos en modo settings
+  if (event != BTN_NONE) {
+    Serial.print("🎮 Settings received: ");
+    switch(event) {
+      case BTN_SELECT_PRESSED: Serial.println("SELECT_PRESSED"); break;
+      case BTN_SELECT_RELEASED: Serial.println("SELECT_RELEASED"); break;
+      case BTN_SELECT_LONG_PRESS: Serial.println("SELECT_LONG_PRESS"); break;
+      case BTN_BACK_PRESSED: Serial.println("BACK_PRESSED"); break;
+      case BTN_BACK_RELEASED: Serial.println("BACK_RELEASED"); break;
+      case BTN_BACK_LONG_PRESS: Serial.println("BACK_LONG_PRESS"); break;
+      default: Serial.println("UNKNOWN"); break;
+    }
+  }
+  
   switch (event) {
     case BTN_BACK_RELEASED:
       changeMode(MODE_MENU);
@@ -290,6 +368,20 @@ void handleSettingsMode() {
 
 void handleInfoMode() {
   ButtonEvent event = input.getButtonEvent();
+  
+  // ✅ DEBUG: Mostrar eventos recibidos en modo info
+  if (event != BTN_NONE) {
+    Serial.print("🎮 Info received: ");
+    switch(event) {
+      case BTN_SELECT_PRESSED: Serial.println("SELECT_PRESSED"); break;
+      case BTN_SELECT_RELEASED: Serial.println("SELECT_RELEASED"); break;
+      case BTN_SELECT_LONG_PRESS: Serial.println("SELECT_LONG_PRESS"); break;
+      case BTN_BACK_PRESSED: Serial.println("BACK_PRESSED"); break;
+      case BTN_BACK_RELEASED: Serial.println("BACK_RELEASED"); break;
+      case BTN_BACK_LONG_PRESS: Serial.println("BACK_LONG_PRESS"); break;
+      default: Serial.println("UNKNOWN"); break;
+    }
+  }
   
   switch (event) {
     case BTN_BACK_RELEASED:
@@ -411,7 +503,7 @@ void loop() {
   
   // Actualizar inputs
   input.update();
-  sensors.update();
+  sensors.update();  // ✅ Ahora con debug detallado del sensor de sonido
   output.update();
   
   // Manejar modo actual

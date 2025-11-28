@@ -15,17 +15,31 @@ void Sensors::begin() {
 }
 
 void Sensors::update() {
-  soundState = digitalRead(PIN_SOUND) == LOW; // Activo LOW
+  int rawValue = digitalRead(PIN_SOUND);
+  soundState = (rawValue == LOW); // Prueba con LOW primero
+  
+  // ✅ DEBUG: Imprimir cuando cambia
+  static int lastRaw = -1;
+  if (rawValue != lastRaw) {
+    Serial.print("🔊 Sound sensor: ");
+    Serial.println(rawValue ? "HIGH" : "LOW");
+    lastRaw = rawValue;
+  }
   
   // Detectar inicio de sonido
   if (soundState && !soundLast) {
     soundStartTime = millis();
+    Serial.println("🎤 Sound START");  // ✅ DEBUG
   }
   
   // Detectar fin de sonido
   if (!soundState && soundLast) {
     unsigned long duration = millis() - soundStartTime;
     unsigned long timeSinceLastClap = millis() - lastClapTime;
+    
+    Serial.print("🎤 Sound END - Duration: ");
+    Serial.print(duration);
+    Serial.println("ms");  // ✅ DEBUG
     
     // Verificar si es un CLAP válido
     if (duration >= CLAP_DURATION_MIN && 
@@ -35,9 +49,15 @@ void Sensors::update() {
       clapFlag = true;
       lastClapTime = millis();
       
-      Serial.print("👏 CLAP detectado! Duración: ");
+      Serial.print("👏 CLAP VÁLIDO! Duración: ");
       Serial.print(duration);
       Serial.println("ms");
+    } else {
+      Serial.print("❌ Ruido ignorado - ");
+      if (duration < CLAP_DURATION_MIN) Serial.print("muy corto");
+      else if (duration > CLAP_DURATION_MAX) Serial.print("muy largo");
+      else if (timeSinceLastClap < CLAP_COOLDOWN_MS) Serial.print("muy rápido");
+      Serial.println();
     }
   }
   

@@ -8,6 +8,8 @@ void Menu::begin() {
   selectedOption = 0;
   lastPotValue = 0;
   needsRedraw = true;
+  screenChanged = false;
+  pendingScreen = SCREEN_MAIN_MENU;
   
   Serial.println("Menu system initialized");
 }
@@ -110,6 +112,10 @@ void Menu::goToScreen(MenuScreen screen) {
   currentScreen = screen;
   needsRedraw = true;
   
+  // ✅ NUEVO: Marcar cambio de pantalla para notificar a main.cpp
+  screenChanged = true;
+  pendingScreen = screen;
+  
   Serial.print("Screen changed: ");
   Serial.println(screen);
 }
@@ -122,10 +128,33 @@ int Menu::getSelectedOption() {
   return selectedOption;
 }
 
+// ✅ NUEVO: Funciones para manejar notificación de cambios
+bool Menu::hasScreenChanged() {
+  return screenChanged;
+}
+
+MenuScreen Menu::getPendingScreen() {
+  return pendingScreen;
+}
+
+void Menu::clearScreenChange() {
+  screenChanged = false;
+}
+
 void Menu::handlePotChange(int value) {
+  // ⭐ VALIDACIÓN: Rechazar valores inválidos
+  if (value < 0 || value > 100) {
+    Serial.println("⚠️ POT value out of range, ignoring");
+    return;
+  }
+  
   // Mapear 0-100 a opciones del menú
   if (currentScreen == SCREEN_MAIN_MENU) {
     int newOption = map(value, 0, 100, 0, MENU_OPTION_COUNT - 1);
+    
+    // ⭐ VALIDACIÓN: Asegurar opción válida
+    if (newOption < 0) newOption = 0;
+    if (newOption >= MENU_OPTION_COUNT) newOption = MENU_OPTION_COUNT - 1;
     
     if (newOption != selectedOption) {
       selectedOption = newOption;
@@ -145,25 +174,38 @@ void Menu::handleSelectButton() {
   output.setGreenLED(LED_OFF);
   
   if (currentScreen == SCREEN_MAIN_MENU) {
+    // ✅ DEBUG: Imprimir información de la selección
+    Serial.print("Menu: Selected option ");
+    Serial.print(selectedOption);
+    
     switch (selectedOption) {
       case MENU_POMODORO:
+        Serial.println(" -> SCREEN_POMODORO_CONFIG");
         goToScreen(SCREEN_POMODORO_CONFIG);
         break;
         
       case MENU_GYM:
+        Serial.println(" -> SCREEN_GYM_RUNNING");
         goToScreen(SCREEN_GYM_RUNNING);
         break;
         
       case MENU_SETTINGS:
+        Serial.println(" -> SCREEN_SETTINGS");
         goToScreen(SCREEN_SETTINGS);
         break;
         
       case MENU_STATS:
+        Serial.println(" -> SCREEN_STATS");
         goToScreen(SCREEN_STATS);
         break;
         
       case MENU_INFO:
+        Serial.println(" -> SCREEN_INFO");
         goToScreen(SCREEN_INFO);
+        break;
+        
+      default:
+        Serial.println(" -> UNKNOWN OPTION");
         break;
     }
   }
@@ -174,6 +216,7 @@ void Menu::handleBackButton() {
   
   // Regresar al menú principal desde cualquier pantalla
   if (currentScreen != SCREEN_MAIN_MENU) {
+    Serial.println("Menu: Back button -> SCREEN_MAIN_MENU");
     goToScreen(SCREEN_MAIN_MENU);
   }
 }

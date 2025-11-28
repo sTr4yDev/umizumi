@@ -38,6 +38,11 @@ public:
   MenuScreen getCurrentScreen();
   int getSelectedOption();
   
+  // ✅ NUEVO: Sistema de notificación de cambios
+  bool hasScreenChanged();
+  MenuScreen getPendingScreen();
+  void clearScreenChange();
+  
   // Control
   void handlePotChange(int value);
   void handleSelectButton();
@@ -49,6 +54,10 @@ private:
   int selectedOption;
   int lastPotValue;
   bool needsRedraw;
+  
+  // ✅ NUEVO: Variables para notificación
+  bool screenChanged;
+  MenuScreen pendingScreen;
   
   // Dibujar menús
   void drawMainMenu();

@@ -83,51 +83,75 @@ bool Input::potChanged() {
 
 ButtonEvent Input::getButtonEvent() {
   unsigned long now = millis();
+  ButtonEvent event = BTN_NONE;
   
   // Debounce
   if (now - lastDebounceTime < 50) {
     return BTN_NONE;
   }
   
-  // SELECT
+  // SELECT - ✅ CORREGIDO: Mejor manejo de estados
   if (btnSelectState != btnSelectLast) {
     lastDebounceTime = now;
-    btnSelectLast = btnSelectState;
     
     if (btnSelectState == LOW) {
       // Presionado
       btnSelectPressTime = now;
-      return BTN_SELECT_PRESSED;
+      Serial.println("🔘 SELECT pressed");
+      event = BTN_SELECT_PRESSED;
     } else {
       // Liberado
       unsigned long pressDuration = now - btnSelectPressTime;
+      Serial.print("🔘 SELECT released (");
+      Serial.print(pressDuration);
+      Serial.println("ms)");
+      
       if (pressDuration > 1000) {
-        return BTN_SELECT_LONG_PRESS;
+        Serial.println("🔘 SELECT LONG PRESS DETECTED");
+        event = BTN_SELECT_LONG_PRESS;
       } else {
-        return BTN_SELECT_RELEASED;
+        Serial.println("🔘 SELECT short press");
+        event = BTN_SELECT_RELEASED;
       }
     }
+    // ✅ IMPORTANTE: Actualizar el estado anterior DESPUÉS de procesar
+    btnSelectLast = btnSelectState;
+  }
+  
+  // Si ya hay evento de SELECT, no procesar BACK
+  if (event != BTN_NONE) {
+    return event;
   }
   
   // BACK
   if (btnBackState != btnBackLast) {
     lastDebounceTime = now;
-    btnBackLast = btnBackState;
     
     if (btnBackState == LOW) {
+      // Presionado
       btnBackPressTime = now;
-      return BTN_BACK_PRESSED;
+      Serial.println("🔘 BACK pressed");
+      event = BTN_BACK_PRESSED;
     } else {
+      // Liberado
       unsigned long pressDuration = now - btnBackPressTime;
+      Serial.print("🔘 BACK released (");
+      Serial.print(pressDuration);
+      Serial.println("ms)");
+      
       if (pressDuration > 1000) {
-        return BTN_BACK_LONG_PRESS;
+        Serial.println("🔘 BACK LONG PRESS DETECTED");
+        event = BTN_BACK_LONG_PRESS;
       } else {
-        return BTN_BACK_RELEASED;
+        Serial.println("🔘 BACK short press");
+        event = BTN_BACK_RELEASED;
       }
     }
+    // ✅ Actualizar el estado anterior DESPUÉS de procesar
+    btnBackLast = btnBackState;
   }
   
-  return BTN_NONE;
+  return event;
 }
 
 bool Input::isSelectPressed() {

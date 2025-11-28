@@ -38,7 +38,7 @@ public:
   MenuScreen getCurrentScreen();
   int getSelectedOption();
   
-  // ✅ NUEVO: Sistema de notificación de cambios
+  // ✅ NUEVO: Sistema de notificación de cambio de pantalla
   bool hasScreenChanged();
   MenuScreen getPendingScreen();
   void clearScreenChange();
